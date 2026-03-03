@@ -222,6 +222,7 @@ interface FallbackVideo {
   description: string;
   thumbnailUrl: string;
   videoUrl: string;
+  youtubeId?: string;
   duration: number;
   views: number;
   category: string;
@@ -285,9 +286,9 @@ export async function POST() {
         }
       ];
       
-      // Add IDs to fallback music and videos
-      fallbackMusic = fallbackMusic.map((m, i) => ({ ...m, _id: `music-${i}` }));
-      fallbackVideos = fallbackVideos.map((v, i) => ({ ...v, _id: `video-${i}` }));
+      // Add IDs to fallback music and videos (preserve existing IDs)
+      fallbackMusic = fallbackMusic.map((m, i) => ({ ...m, _id: m._id || `music-${i}` }));
+      fallbackVideos = fallbackVideos.map((v, i) => ({ ...v, _id: v._id || `video-${i}` }));
 
       return NextResponse.json({
         success: true,
@@ -338,8 +339,8 @@ export async function POST() {
     console.error('Error seeding database:', error);
     
     // Return fallback data on error
-    fallbackMusic = sampleMusic.map((m, i) => ({ ...m, _id: `music-${i}` }));
-    fallbackVideos = sampleVideos.map((v, i) => ({ ...v, _id: `video-${i}` }));
+    fallbackMusic = sampleMusic.map((m, i) => ({ ...m, _id: m._id || `music-${i}` }));
+    fallbackVideos = sampleVideos.map((v, i) => ({ ...v, _id: v._id || `video-${i}` }));
     
     return NextResponse.json({
       success: true,
