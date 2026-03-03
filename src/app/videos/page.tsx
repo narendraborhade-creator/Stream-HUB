@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { Video as VideoIcon, FolderOpen, Film } from 'lucide-react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { Video as VideoIcon, FolderOpen, Film, Play, X, Maximize2, Volume2, VolumeX, Pause } from 'lucide-react';
 import VideoCard from '@/components/video/VideoCard';
 import VideoImportButton from '@/components/video/VideoImportButton';
+import DeviceFilePicker from '@/components/video/DeviceFilePicker';
 
 interface Video {
   _id: string;
@@ -27,6 +28,7 @@ export default function VideosPage() {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [localVideos, setLocalVideos] = useState<Video[]>([]);
+  const [playingVideo, setPlayingVideo] = useState<Video | null>(null);
 
   // Get MIME type from file extension
   const getVideoMimeType = (filename: string): string => {
@@ -146,6 +148,19 @@ export default function VideosPage() {
     window.location.href = `/videos/${video._id}`;
   };
 
+  // Handle playing device video directly
+  const handlePlayDeviceVideo = (video: Video) => {
+    setPlayingVideo(video);
+  };
+
+  // Close video player
+  const closePlayer = () => {
+    if (playingVideo) {
+      URL.revokeObjectURL(playingVideo.videoUrl);
+    }
+    setPlayingVideo(null);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -167,10 +182,13 @@ export default function VideosPage() {
           </div>
           
           {/* Import Video Button - Separate Component */}
-          <VideoImportButton 
-            onImport={(videos) => setLocalVideos(videos)} 
-            localVideos={localVideos} 
-          />
+          <div className="flex gap-3">
+            <DeviceFilePicker onPlayVideo={handlePlayDeviceVideo} />
+            <VideoImportButton 
+              onImport={(videos) => setLocalVideos(videos)} 
+              localVideos={localVideos} 
+            />
+          </div>
         </div>
         <p className="text-gray-400">Watch videos for free • Import videos from your device</p>
       </div>
@@ -251,6 +269,29 @@ export default function VideosPage() {
           </div>
         )}
       </div>
+
+      {/* Video Player Modal */}
+      {playingVideo && (
+        <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
+          <button
+            onClick={closePlayer}
+            className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+          >
+            <X className="w-8 h-8" />
+          </button>
+          
+          <video
+            key={playingVideo.videoUrl}
+            className="w-full h-full max-h-screen object-contain"
+            controls
+            autoPlay
+            playsInline
+          >
+            <source src={playingVideo.videoUrl} type={getVideoMimeType(playingVideo.title)} />
+            Your browser does not support video playback.
+          </video>
+        </div>
+      )}
     </div>
   );
 }
