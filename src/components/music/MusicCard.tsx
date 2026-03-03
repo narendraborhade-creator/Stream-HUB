@@ -84,22 +84,10 @@ export default function MusicCard({ music, onPlay }: MusicCardProps) {
           <div className="flex items-center gap-3">
             <span>{formatNumber(music.playCount)} plays</span>
             <button
-              onClick={async (e) => {
+              onClick={(e) => {
                 e.stopPropagation();
-                try {
-                  const response = await fetch(music.audioUrl);
-                  const blob = await response.blob();
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `${music.artist} - ${music.title}.mp3`;
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-                  URL.revokeObjectURL(url);
-                } catch (error) {
-                  console.error('Download failed:', error);
-                }
+                const downloadUrl = `/api/download?url=${encodeURIComponent(music.audioUrl)}&filename=${encodeURIComponent(music.artist + ' - ' + music.title)}`;
+                window.open(downloadUrl, '_blank');
               }}
               className="hover:text-purple-400 transition-colors"
               title="Download"
