@@ -20,6 +20,7 @@ StreamHub is a complete entertainment streaming application with MongoDB backend
 - [x] Fix YouTube video ID preservation in fallback data
 - [x] Hide custom video controls for YouTube embeds since they have their own
 - [x] Add server-side download API to bypass CORS restrictions
+- [x] Add local video import and storage with IndexedDB
 
 ## Current Structure
 
@@ -93,6 +94,7 @@ StreamHub is a complete entertainment streaming application with MongoDB backend
 | 2026-03-03 | Fixed React key prop error (unique _id for music/videos) |
 | 2026-03-03 | Added YouTube video embed support |
 | 2026-03-03 | Fixed YouTube controls and download CORS issue |
+| 2026-03-03 | Added local video import and IndexedDB storage |
 
 ## Bug Fixes Applied
 
