@@ -1,12 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Bell, User } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Header() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [isMounted] = useState(() => typeof window !== 'undefined');
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
