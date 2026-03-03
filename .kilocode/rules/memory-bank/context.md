@@ -84,9 +84,11 @@ StreamHub is a complete entertainment streaming application with MongoDB backend
 | Initial | Template created with base setup |
 | Now | Complete StreamHub entertainment app |
 | 2026-03-03 | Fixed hydration error and added image configuration |
+| 2026-03-03 | Fixed React key prop error (unique _id for music/videos) |
 
 ## Bug Fixes Applied
 
 - [x] Fixed React hydration mismatch in Header component (useSyncExternalStore approach)
 - [x] Added suppressHydrationWarning to form inputs to fix fdprocessedid mismatch
 - [x] Added picsum.photos to allowed image domains in next.config.ts
+- [x] Added unique _id fields to sample music and videos in seed data
