@@ -1,16 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { Search, Bell, User } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Header() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  
+  // Use useSyncExternalStore to safely detect client-side mount
+  const isMounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,6 +30,7 @@ export default function Header() {
               <>
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
+                  suppressHydrationWarning
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -44,7 +47,7 @@ export default function Header() {
         </form>
 
         <div className="flex items-center gap-4">
-          <button className="relative p-2 text-gray-400 hover:text-white transition-colors">
+          <button suppressHydrationWarning className="relative p-2 text-gray-400 hover:text-white transition-colors">
             <Bell className="w-5 h-5" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-pink-500 rounded-full"></span>
           </button>
