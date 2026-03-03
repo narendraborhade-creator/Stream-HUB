@@ -157,74 +157,76 @@ export default function VideoPlayerPage() {
               allowFullScreen
             />
           ) : (
-            <video
-              ref={videoRef}
-              src={video.videoUrl}
-              className="w-full h-full"
-              onTimeUpdate={handleTimeUpdate}
-              onLoadedMetadata={handleLoadedMetadata}
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-              onClick={togglePlay}
-            />
-          )}
-          
-          {/* Video Controls */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4">
-            {/* Progress Bar */}
-            <input
-              type="range"
-              min="0"
-              max={duration || 100}
-              value={currentTime}
-              onChange={handleSeek}
-              className="w-full h-1 bg-gray-600 rounded-full appearance-none cursor-pointer mb-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full"
-            />
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={togglePlay}
-                  className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform"
-                >
-                  {isPlaying ? (
-                    <Pause className="w-5 h-5 text-black" />
-                  ) : (
-                    <Play className="w-5 h-5 text-black ml-0.5" />
-                  )}
-                </button>
+            <>
+              <video
+                ref={videoRef}
+                src={video.videoUrl}
+                className="w-full h-full"
+                onTimeUpdate={handleTimeUpdate}
+                onLoadedMetadata={handleLoadedMetadata}
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+                onClick={togglePlay}
+              />
+              
+              {/* Video Controls */}
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4">
+                {/* Progress Bar */}
+                <input
+                  type="range"
+                  min="0"
+                  max={duration || 100}
+                  value={currentTime}
+                  onChange={handleSeek}
+                  className="w-full h-1 bg-gray-600 rounded-full appearance-none cursor-pointer mb-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full"
+                />
                 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={togglePlay}
+                      className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform"
+                    >
+                      {isPlaying ? (
+                        <Pause className="w-5 h-5 text-black" />
+                      ) : (
+                        <Play className="w-5 h-5 text-black ml-0.5" />
+                      )}
+                    </button>
+                    
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setIsMuted(!isMuted)}
+                        className="text-white hover:text-gray-300"
+                      >
+                        {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                      </button>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        value={isMuted ? 0 : volume}
+                        onChange={handleVolumeChange}
+                        className="w-20 h-1 bg-gray-600 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full"
+                      />
+                    </div>
+                    
+                    <span className="text-white text-sm">
+                      {formatTime(currentTime)} / {formatTime(duration)}
+                    </span>
+                  </div>
+                  
                   <button
-                    onClick={() => setIsMuted(!isMuted)}
+                    onClick={toggleFullscreen}
                     className="text-white hover:text-gray-300"
                   >
-                    {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                    <Maximize className="w-5 h-5" />
                   </button>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.1"
-                    value={isMuted ? 0 : volume}
-                    onChange={handleVolumeChange}
-                    className="w-20 h-1 bg-gray-600 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full"
-                  />
                 </div>
-                
-                <span className="text-white text-sm">
-                  {formatTime(currentTime)} / {formatTime(duration)}
-                </span>
               </div>
-              
-              <button
-                onClick={toggleFullscreen}
-                className="text-white hover:text-gray-300"
-              >
-                <Maximize className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
+            </>
+          )}
         </div>
       </div>
 
