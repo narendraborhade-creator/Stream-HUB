@@ -8,7 +8,7 @@ interface MongooseCache {
 }
 
 declare global {
-   
+  
   var mongoose: MongooseCache | undefined;
 }
 
@@ -18,29 +18,46 @@ if (!global.mongoose) {
   global.mongoose = cached;
 }
 
-async function connectDB(): Promise<typeof mongoose> {
+let isConnected: boolean | 'failed' = false;
+
+export async function connectDB(): Promise<typeof mongoose | null> {
+  // If already connected, return cached connection
   if (cached.conn) {
     return cached.conn;
   }
 
-  if (!cached.promise) {
-    const opts = {
-      bufferCommands: false,
-    };
-
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-      return mongoose;
-    });
+  // If connection already failed once, return null (will use fallback)
+  if (isConnected === 'failed') {
+    return null;
   }
 
   try {
-    cached.conn = await cached.promise;
-  } catch (e) {
-    cached.promise = null;
-    throw e;
-  }
+    if (!cached.promise) {
+      const opts = {
+        bufferCommands: false,
+      };
 
-  return cached.conn;
+      cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+        return mongoose;
+      });
+    }
+
+    try {
+      cached.conn = await cached.promise;
+      isConnected = true;
+    } catch (e) {
+      cached.promise = null;
+      isConnected = 'failed';
+      console.warn('MongoDB connection failed, using fallback data');
+      return null;
+    }
+
+    return cached.conn;
+  } catch (e) {
+    isConnected = 'failed';
+    console.warn('MongoDB connection failed, using fallback data');
+    return null;
+  }
 }
 
 export default connectDB;
