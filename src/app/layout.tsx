@@ -1,20 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import Sidebar from "@/components/layout/Sidebar";
+import Header from "@/components/layout/Header";
+import { PlayerProvider } from "@/context/PlayerContext";
 
 export const metadata: Metadata = {
-  title: "Next.js Template",
-  description: "A minimal Next.js starter template",
+  title: "StreamHub - Free Music & Video Streaming",
+  description: "Stream and download music and videos for free",
 };
 
 export default function RootLayout({
@@ -24,10 +16,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className="bg-gray-950 text-white antialiased">
+        <PlayerProvider>
+          <div className="min-h-screen">
+            <Sidebar />
+            <Header />
+            <main className="ml-64 pt-16 pb-24">
+              {children}
+            </main>
+          </div>
+        </PlayerProvider>
       </body>
     </html>
   );
