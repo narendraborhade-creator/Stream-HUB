@@ -18,6 +18,8 @@ StreamHub is a complete entertainment streaming application with MongoDB backend
 - [x] YouTube video embed support
 - [x] Fix React hydration error and key prop issues
 - [x] Fix YouTube video ID preservation in fallback data
+- [x] Hide custom video controls for YouTube embeds since they have their own
+- [x] Add server-side download API to bypass CORS restrictions
 
 ## Current Structure
 
@@ -36,6 +38,7 @@ StreamHub is a complete entertainment streaming application with MongoDB backend
 | `src/app/api/search/` | Search API route | ✅ |
 | `src/app/api/playlist/` | Playlist API routes | ✅ |
 | `src/app/api/seed/` | Seed data API | ✅ |
+| `src/app/api/download/` | Server-side download API | ✅ |
 | `src/components/` | Reusable UI components | ✅ |
 | `src/lib/mongodb.ts` | MongoDB connection | ✅ |
 | `src/lib/models.ts` | Database models | ✅ |
@@ -89,6 +92,7 @@ StreamHub is a complete entertainment streaming application with MongoDB backend
 | 2026-03-03 | Fixed hydration error and added image configuration |
 | 2026-03-03 | Fixed React key prop error (unique _id for music/videos) |
 | 2026-03-03 | Added YouTube video embed support |
+| 2026-03-03 | Fixed YouTube controls and download CORS issue |
 
 ## Bug Fixes Applied
 
