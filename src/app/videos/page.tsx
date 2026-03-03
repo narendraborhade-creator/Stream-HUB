@@ -10,6 +10,7 @@ interface Video {
   description: string;
   thumbnailUrl: string;
   videoUrl: string;
+  youtubeId?: string;
   duration: number;
   views: number;
   category: string;
