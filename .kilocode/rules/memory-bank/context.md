@@ -24,6 +24,7 @@ StreamHub is a complete entertainment streaming application with MongoDB backend
 - [x] Fix local video persistence after page refresh
 - [x] Redesign video page with improved local video import UI
 - [x] Extract video import button as separate reusable component
+- [x] Add device file picker for browsing and playing local videos directly
 
 ## Current Structure
 
