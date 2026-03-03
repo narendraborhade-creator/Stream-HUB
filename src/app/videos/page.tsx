@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { Video as VideoIcon, Filter, Upload, FolderOpen, X } from 'lucide-react';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { Video as VideoIcon, Filter, Upload, FolderOpen, X, Play, Plus, Trash2, Film } from 'lucide-react';
 import VideoCard from '@/components/video/VideoCard';
 
 interface Video {
@@ -17,6 +17,7 @@ interface Video {
   uploader: string;
   isLocal?: boolean;
   localFile?: File;
+  fileData?: ArrayBuffer;
 }
 
 const categories = ['All', 'Nature', 'Travel', 'Food', 'Technology', 'Fitness', 'Documentary', 'My Videos'];
@@ -27,7 +28,25 @@ export default function VideosPage() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [localVideos, setLocalVideos] = useState<Video[]>([]);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadingProgress, setUploadingProgress] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
+
+  // IndexedDB helpers
+  const openDB = useCallback(async (): Promise<IDBDatabase> => {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('StreamHubVideos', 2);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains('localVideos')) {
+          db.createObjectStore('localVideos', { keyPath: '_id' });
+        }
+      };
+    });
+  }, []);
 
   // Load local videos from IndexedDB on mount
   useEffect(() => {
@@ -37,14 +56,16 @@ export default function VideosPage() {
         const tx = db.transaction('localVideos', 'readonly');
         const store = tx.objectStore('localVideos');
         const request = store.getAll();
+        
         request.onsuccess = () => {
           const videos = request.result || [];
-          // Recreate blob URLs from stored files
-          const videosWithUrls = videos.map((v: Video & { file?: File }) => {
-            if (v.file) {
-              return { ...v, videoUrl: URL.createObjectURL(v.file) };
+          const videosWithUrls: Video[] = videos.map((v: Video) => {
+            if (v.fileData) {
+              const blob = new Blob([v.fileData], { type: getVideoMimeType(v.title) });
+              const url = URL.createObjectURL(blob);
+              return { ...v, videoUrl: url, isLocal: true };
             }
-            return v;
+            return { ...v, isLocal: true };
           });
           setLocalVideos(videosWithUrls);
         };
@@ -57,39 +78,42 @@ export default function VideosPage() {
     };
 
     loadLocalVideos();
-  }, []);
+  }, [openDB]);
 
-  // IndexedDB helpers
-  async function openDB(): Promise<IDBDatabase> {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open('StreamHubVideos', 1);
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
-      request.onupgradeneeded = () => {
-        const db = request.result;
-        if (!db.objectStoreNames.contains('localVideos')) {
-          db.createObjectStore('localVideos', { keyPath: '_id' });
-        }
-      };
-    });
-  }
+  // Get MIME type from file extension
+  const getVideoMimeType = (filename: string): string => {
+    const ext = filename.split('.').pop()?.toLowerCase();
+    const mimeTypes: Record<string, string> = {
+      mp4: 'video/mp4',
+      webm: 'video/webm',
+      mkv: 'video/x-matroska',
+      avi: 'video/x-msvideo',
+      mov: 'video/quicktime',
+      wmv: 'video/x-ms-wmv',
+      flv: 'video/x-flv',
+      m4v: 'video/x-m4v',
+    };
+    return mimeTypes[ext || ''] || 'video/mp4';
+  };
 
-  async function saveVideoToDB(video: Video, file: File) {
+  // Save video to IndexedDB
+  const saveVideoToDB = async (video: Video, arrayBuffer: ArrayBuffer) => {
     return new Promise<void>((resolve, reject) => {
       openDB().then(db => {
         const tx = db.transaction('localVideos', 'readwrite');
         const store = tx.objectStore('localVideos');
         
-        const data = { ...video, file };
+        const data = { ...video, fileData: arrayBuffer };
         const request = store.put(data);
         
         request.onsuccess = () => resolve();
         request.onerror = () => reject(request.error);
       }).catch(reject);
     });
-  }
+  };
 
-  async function deleteVideoFromDB(videoId: string) {
+  // Delete video from IndexedDB
+  const deleteVideoFromDB = async (videoId: string) => {
     return new Promise<void>((resolve, reject) => {
       openDB().then(db => {
         const tx = db.transaction('localVideos', 'readwrite');
@@ -100,8 +124,9 @@ export default function VideosPage() {
         request.onerror = () => reject(request.error);
       }).catch(reject);
     });
-  }
+  };
 
+  // Fetch server videos
   useEffect(() => {
     const fetchVideos = async () => {
       try {
@@ -121,16 +146,25 @@ export default function VideosPage() {
     fetchVideos();
   }, [selectedCategory]);
 
-  // Handle importing local video files
-  const handleImportVideo = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
+  // Handle file import
+  const handleImportVideo = async (e: React.ChangeEvent<HTMLInputElement> | FileList) => {
+    let files: FileList | null = null;
+    
+    if (e instanceof FileList) {
+      files = e;
+    } else {
+      files = e.target.files;
+    }
+    
     if (!files || files.length === 0) return;
 
     const newVideos: Video[] = [];
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const fileUrl = URL.createObjectURL(file);
+      
+      // Read file as ArrayBuffer for storage
+      const arrayBuffer = await file.arrayBuffer();
       
       // Get video duration
       const duration = await new Promise<number>((resolve) => {
@@ -144,15 +178,17 @@ export default function VideosPage() {
           resolve(0);
           URL.revokeObjectURL(video.src);
         };
-        video.src = fileUrl;
+        video.src = URL.createObjectURL(file);
       });
+
+      const videoUrl = URL.createObjectURL(file);
 
       const newVideo: Video = {
         _id: `local_${Date.now()}_${i}`,
         title: file.name.replace(/\.[^/.]+$/, ''),
-        description: 'Local video file',
-        thumbnailUrl: 'https://picsum.photos/seed/' + Date.now() + '/320/180',
-        videoUrl: fileUrl,
+        description: 'Local video file from your device',
+        thumbnailUrl: `https://picsum.photos/seed/${Date.now() + i}/320/180`,
+        videoUrl,
         duration: Math.floor(duration),
         views: 0,
         category: 'My Videos',
@@ -161,7 +197,7 @@ export default function VideosPage() {
       };
 
       // Save video file to IndexedDB
-      await saveVideoToDB(newVideo, file);
+      await saveVideoToDB(newVideo, arrayBuffer);
       newVideos.push(newVideo);
     }
 
@@ -169,12 +205,37 @@ export default function VideosPage() {
     setLocalVideos(updatedLocalVideos);
     
     setShowUploadModal(false);
+    setUploadingProgress(null);
     
     // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
+
+  // Drag and drop handlers
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      handleImportVideo(files);
+    }
+  }, [localVideos]);
 
   // Handle deleting a local video
   const handleDeleteLocalVideo = async (videoId: string) => {
@@ -189,7 +250,7 @@ export default function VideosPage() {
       return localVideos;
     }
     if (selectedCategory === 'All') {
-      return [...videos, ...localVideos];
+      return [...localVideos, ...videos];
     }
     return videos.filter(v => v.category === selectedCategory);
   };
@@ -210,23 +271,50 @@ export default function VideosPage() {
     <div className="min-h-screen pb-24">
       {/* Header */}
       <div className="px-8 py-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 mb-2">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-gradient-to-br from-pink-600 to-purple-600 rounded-xl flex items-center justify-center">
-              <VideoIcon className="w-6 h-6 text-white" />
+              <Film className="w-6 h-6 text-white" />
             </div>
             <h1 className="text-3xl font-bold">Videos</h1>
           </div>
+          
+          {/* Import Video Button - More Prominent */}
           <button
             onClick={() => setShowUploadModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl transition-all shadow-lg hover:shadow-purple-500/25 font-medium"
           >
-            <FolderOpen className="w-5 h-5" />
-            Import Video
+            <Plus className="w-5 h-5" />
+            Import from Device
           </button>
         </div>
-        <p className="text-gray-400">Watch videos for free</p>
+        <p className="text-gray-400">Watch videos for free • Import videos from your device</p>
       </div>
+
+      {/* Quick Access to Local Videos */}
+      {localVideos.length > 0 && (
+        <div className="px-8 mb-6">
+          <div className="bg-gradient-to-r from-green-900/50 to-emerald-900/50 rounded-xl p-4 border border-green-800">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+                  <FolderOpen className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold">My Device Videos</h3>
+                  <p className="text-green-400 text-sm">{localVideos.length} video{localVideos.length !== 1 ? 's' : ''} imported</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedCategory('My Videos')}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium"
+              >
+                View All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Category Filters */}
       <div className="px-8 mb-8">
@@ -242,6 +330,11 @@ export default function VideosPage() {
               }`}
             >
               {category}
+              {category === 'My Videos' && localVideos.length > 0 && (
+                <span className="ml-2 px-2 py-0.5 bg-green-600 text-white text-xs rounded-full">
+                  {localVideos.length}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -251,8 +344,22 @@ export default function VideosPage() {
       <div className="px-8">
         {getFilteredVideos().length === 0 ? (
           <div className="text-center py-16">
-            <VideoIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400">No videos found</p>
+            <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+              <VideoIcon className="w-10 h-10 text-gray-600" />
+            </div>
+            <p className="text-gray-400 text-lg mb-2">No videos found</p>
+            <p className="text-gray-500 text-sm mb-6">
+              {selectedCategory === 'My Videos' 
+                ? 'Import videos from your device to get started'
+                : 'Import videos from your device or browse online content'}
+            </p>
+            <button
+              onClick={() => setShowUploadModal(true)}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-colors font-medium"
+            >
+              <Plus className="w-5 h-5" />
+              Import Video
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -269,25 +376,43 @@ export default function VideosPage() {
 
       {/* Upload Modal */}
       {showUploadModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-2xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 rounded-2xl p-6 w-full max-w-lg">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold">Import Video</h2>
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <FolderOpen className="w-5 h-5 text-purple-500" />
+                Import Videos from Device
+              </h2>
               <button
                 onClick={() => setShowUploadModal(false)}
-                className="text-gray-400 hover:text-white"
+                className="text-gray-400 hover:text-white p-1 rounded-lg hover:bg-gray-800 transition-colors"
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
             
+            {/* Drop Zone */}
             <div 
-              className="border-2 border-dashed border-gray-700 rounded-xl p-8 text-center cursor-pointer hover:border-purple-500 transition-colors"
+              ref={dropZoneRef}
+              className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all ${
+                isDragging 
+                  ? 'border-purple-500 bg-purple-500/10' 
+                  : 'border-gray-700 hover:border-purple-500 hover:bg-gray-800/50'
+              }`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
             >
-              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-white font-medium mb-2">Click to select video files</p>
-              <p className="text-gray-400 text-sm">Supports MP4, WebM, MKV, AVI</p>
+              <div className="w-16 h-16 bg-purple-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Upload className={`w-8 h-8 ${isDragging ? 'text-purple-400' : 'text-gray-400'}`} />
+              </div>
+              <p className="text-white font-medium text-lg mb-2">
+                {isDragging ? 'Drop your videos here' : 'Click to select or drag & drop'}
+              </p>
+              <p className="text-gray-400 text-sm">
+                Supports MP4, WebM, MKV, AVI, MOV
+              </p>
             </div>
             
             <input
@@ -299,11 +424,26 @@ export default function VideosPage() {
               className="hidden"
             />
             
-            <div className="mt-4 p-4 bg-gray-800 rounded-lg">
+            <div className="mt-6 p-4 bg-gray-800/50 rounded-lg">
               <p className="text-gray-400 text-sm">
-                <span className="text-yellow-400">Note:</span> Imported videos are stored locally in your browser. 
-                They will persist as long as you do not clear your browser data.
+                <span className="text-yellow-400 font-medium">💡 Tip:</span> Imported videos are stored securely in your browser. 
+                They will persist as long as you don&apos;t clear your browser data. Your videos never leave your device!
               </p>
+            </div>
+
+            <div className="mt-4 flex gap-3">
+              <button
+                onClick={() => setShowUploadModal(false)}
+                className="flex-1 px-4 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-xl transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-1 px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-colors font-medium"
+              >
+                Browse Files
+              </button>
             </div>
           </div>
         </div>

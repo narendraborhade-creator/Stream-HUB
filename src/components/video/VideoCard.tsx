@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Play, Eye, Clock, MoreVertical } from 'lucide-react';
+import { Play, Eye, Clock, MoreVertical, Trash2, FolderOpen } from 'lucide-react';
 import { useState } from 'react';
 
 interface Video {
@@ -21,10 +21,12 @@ interface Video {
 interface VideoCardProps {
   video: Video;
   onWatch: (video: Video) => void;
+  onDelete?: (videoId: string) => void;
 }
 
-export default function VideoCard({ video, onWatch }: VideoCardProps) {
+export default function VideoCard({ video, onWatch, onDelete }: VideoCardProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
 
   const formatDuration = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -43,13 +45,31 @@ export default function VideoCard({ video, onWatch }: VideoCardProps) {
     return num + ' views';
   };
 
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDelete && video.isLocal) {
+      onDelete(video._id);
+    }
+  };
+
   return (
     <div
-      className="group bg-gray-800/50 rounded-xl overflow-hidden hover:bg-gray-800 transition-all duration-300 hover:scale-[1.02] cursor-pointer"
+      className="group bg-gray-800/50 rounded-xl overflow-hidden hover:bg-gray-800 transition-all duration-300 hover:scale-[1.02] cursor-pointer relative"
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseLeave={() => setShowDelete(false)}
       onClick={() => onWatch(video)}
     >
+      {/* Delete button for local videos */}
+      {video.isLocal && (
+        <button
+          onClick={handleDelete}
+          className="absolute top-2 z-10 p-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+          title="Delete video"
+        >
+          <Trash2 className="w-4 h-4 text-white" />
+        </button>
+      )}
+
       <div className="relative aspect-video overflow-hidden">
         <Image
           src={video.thumbnailUrl}
@@ -65,11 +85,15 @@ export default function VideoCard({ video, onWatch }: VideoCardProps) {
         <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-1 rounded text-xs text-white font-medium">
           {formatDuration(video.duration)}
         </div>
+        
+        {/* Category Badge */}
         <div className="absolute top-2 left-2">
           <span className="bg-purple-600/80 px-2 py-1 rounded text-xs text-white font-medium">
             {video.category}
           </span>
         </div>
+
+        {/* YouTube Badge */}
         {video.youtubeId && (
           <div className="absolute top-2 right-2 bg-red-600 px-2 py-1 rounded text-xs text-white font-medium flex items-center gap-1">
             <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
@@ -78,11 +102,11 @@ export default function VideoCard({ video, onWatch }: VideoCardProps) {
             YouTube
           </div>
         )}
-        {video.isLocal && (
+
+        {/* Local Video Badge */}
+        {video.isLocal && !video.youtubeId && (
           <div className="absolute top-2 right-2 bg-green-600 px-2 py-1 rounded text-xs text-white font-medium flex items-center gap-1">
-            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
-            </svg>
+            <FolderOpen className="w-3 h-3" />
             Local
           </div>
         )}
