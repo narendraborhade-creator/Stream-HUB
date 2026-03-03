@@ -5,6 +5,7 @@ import { Music, Video, Playlist } from '@/lib/models';
 // Sample music data using free audio sources
 const sampleMusic = [
   {
+    _id: 'music-0',
     title: 'Summer Vibes',
     artist: 'Chill Wave',
     album: 'Sunset Dreams',
@@ -18,6 +19,7 @@ const sampleMusic = [
     isDownloaded: true
   },
   {
+    _id: 'music-1',
     title: 'Midnight Dreams',
     artist: 'Luna Echo',
     album: 'Night Sky',
@@ -31,6 +33,7 @@ const sampleMusic = [
     isDownloaded: true
   },
   {
+    _id: 'music-2',
     title: 'Urban Rhythm',
     artist: 'City Beats',
     album: 'Street Sounds',
@@ -44,6 +47,7 @@ const sampleMusic = [
     isDownloaded: true
   },
   {
+    _id: 'music-3',
     title: 'Ocean Waves',
     artist: 'Nature Sounds',
     album: 'Relaxation',
@@ -57,6 +61,7 @@ const sampleMusic = [
     isDownloaded: true
   },
   {
+    _id: 'music-4',
     title: 'Electric Soul',
     artist: 'Neon Lights',
     album: 'Digital Age',
@@ -70,6 +75,7 @@ const sampleMusic = [
     isDownloaded: true
   },
   {
+    _id: 'music-5',
     title: 'Mountain High',
     artist: 'Folk Tales',
     album: 'Journey Home',
@@ -83,6 +89,7 @@ const sampleMusic = [
     isDownloaded: true
   },
   {
+    _id: 'music-6',
     title: 'Cosmic Journey',
     artist: 'Space Drift',
     album: 'Galaxy Dreams',
@@ -96,6 +103,7 @@ const sampleMusic = [
     isDownloaded: true
   },
   {
+    _id: 'music-7',
     title: 'Dance Floor',
     artist: 'Party Masters',
     album: 'Weekend Vibes',
@@ -113,6 +121,7 @@ const sampleMusic = [
 // Sample video data using free video sources
 const sampleVideos = [
   {
+    _id: 'video-0',
     title: 'Beautiful Nature Scenery',
     description: 'Relaxing nature footage with peaceful music',
     thumbnailUrl: 'https://picsum.photos/seed/video1/640/360',
@@ -123,6 +132,7 @@ const sampleVideos = [
     uploader: 'Nature Lover'
   },
   {
+    _id: 'video-1',
     title: 'City Night Timelapse',
     description: 'Stunning city lights at night',
     thumbnailUrl: 'https://picsum.photos/seed/video2/640/360',
@@ -133,6 +143,7 @@ const sampleVideos = [
     uploader: 'Urban Explorer'
   },
   {
+    _id: 'video-2',
     title: 'Cooking Masterclass',
     description: 'Learn to cook delicious pasta',
     thumbnailUrl: 'https://picsum.photos/seed/video3/640/360',
@@ -143,6 +154,7 @@ const sampleVideos = [
     uploader: 'Chef John'
   },
   {
+    _id: 'video-3',
     title: 'Tech Review 2024',
     description: 'Latest gadgets review',
     thumbnailUrl: 'https://picsum.photos/seed/video4/640/360',
@@ -153,6 +165,7 @@ const sampleVideos = [
     uploader: 'Tech Guru'
   },
   {
+    _id: 'video-4',
     title: 'Yoga for Beginners',
     description: '30-minute yoga session',
     thumbnailUrl: 'https://picsum.photos/seed/video5/640/360',
@@ -163,6 +176,7 @@ const sampleVideos = [
     uploader: 'Wellness Coach'
   },
   {
+    _id: 'video-5',
     title: 'Documentary: Ocean Life',
     description: 'Amazing underwater world',
     thumbnailUrl: 'https://picsum.photos/seed/video6/640/360',
