@@ -185,6 +185,18 @@ const sampleVideos = [
     views: 67340,
     category: 'Documentary',
     uploader: 'Ocean Explorer'
+  },
+  {
+    _id: 'video-youtube-1',
+    title: 'Relaxing Music for Stress Relief',
+    description: 'Beautiful relaxing music to help you unwind and destress. Perfect for meditation, studying, or just relaxing.',
+    thumbnailUrl: 'https://picsum.photos/seed/youtube1/640/360',
+    videoUrl: 'https://www.youtube.com/watch?v=OustDD-Si4Q',
+    youtubeId: 'OustDD-Si4Q',
+    duration: 3600,
+    views: 1250000,
+    category: 'Music',
+    uploader: 'Relaxation Station'
   }
 ];
 

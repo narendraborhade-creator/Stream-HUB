@@ -10,6 +10,7 @@ interface Video {
   description: string;
   thumbnailUrl: string;
   videoUrl: string;
+  youtubeId?: string;
   duration: number;
   views: number;
   category: string;
@@ -147,16 +148,26 @@ export default function VideoPlayerPage() {
       {/* Video Player */}
       <div className="px-8">
         <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
-          <video
-            ref={videoRef}
-            src={video.videoUrl}
-            className="w-full h-full"
-            onTimeUpdate={handleTimeUpdate}
-            onLoadedMetadata={handleLoadedMetadata}
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
-            onClick={togglePlay}
-          />
+          {video.youtubeId ? (
+            <iframe
+              src={`https://www.youtube.com/embed/${video.youtubeId}?autoplay=1&rel=0`}
+              title={video.title}
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          ) : (
+            <video
+              ref={videoRef}
+              src={video.videoUrl}
+              className="w-full h-full"
+              onTimeUpdate={handleTimeUpdate}
+              onLoadedMetadata={handleLoadedMetadata}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+              onClick={togglePlay}
+            />
+          )}
           
           {/* Video Controls */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4">
