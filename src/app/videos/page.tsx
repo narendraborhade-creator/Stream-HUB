@@ -38,7 +38,15 @@ export default function VideosPage() {
         const store = tx.objectStore('localVideos');
         const request = store.getAll();
         request.onsuccess = () => {
-          setLocalVideos(request.result || []);
+          const videos = request.result || [];
+          // Recreate blob URLs from stored files
+          const videosWithUrls = videos.map((v: Video & { file?: File }) => {
+            if (v.file) {
+              return { ...v, videoUrl: URL.createObjectURL(v.file) };
+            }
+            return v;
+          });
+          setLocalVideos(videosWithUrls);
         };
         request.onerror = () => {
           console.error('Error loading local videos:', request.error);
@@ -67,17 +75,31 @@ export default function VideosPage() {
   }
 
   async function saveVideoToDB(video: Video, file: File) {
-    const db = await openDB();
-    const tx = db.transaction('localVideos', 'readwrite');
-    const store = tx.objectStore('localVideos');
-    await store.put({ ...video, file });
+    return new Promise<void>((resolve, reject) => {
+      openDB().then(db => {
+        const tx = db.transaction('localVideos', 'readwrite');
+        const store = tx.objectStore('localVideos');
+        
+        const data = { ...video, file };
+        const request = store.put(data);
+        
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      }).catch(reject);
+    });
   }
 
   async function deleteVideoFromDB(videoId: string) {
-    const db = await openDB();
-    const tx = db.transaction('localVideos', 'readwrite');
-    const store = tx.objectStore('localVideos');
-    await store.delete(videoId);
+    return new Promise<void>((resolve, reject) => {
+      openDB().then(db => {
+        const tx = db.transaction('localVideos', 'readwrite');
+        const store = tx.objectStore('localVideos');
+        const request = store.delete(videoId);
+        
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      }).catch(reject);
+    });
   }
 
   useEffect(() => {
