@@ -15,6 +15,7 @@ interface Video {
   views: number;
   category: string;
   uploader: string;
+  isLocal?: boolean;
 }
 
 export default function VideoPlayerPage() {
@@ -28,16 +29,70 @@ export default function VideoPlayerPage() {
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
+  const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(null);
+
+  // IndexedDB helper
+  async function openDB(): Promise<IDBDatabase> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('StreamHubVideos', 1);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains('localVideos')) {
+          db.createObjectStore('localVideos', { keyPath: '_id' });
+        }
+      };
+    });
+  }
 
   useEffect(() => {
     const fetchVideo = async () => {
       try {
-        const res = await fetch(`/api/video/${params.id}`);
-        const data = await res.json();
-        if (data.success) {
-          setVideo(data.data);
+        // Check if this is a local video (starts with local_)
+        if (params.id && String(params.id).startsWith('local_')) {
+          // Load from IndexedDB
+          const db = await openDB();
+          const tx = db.transaction('localVideos', 'readonly');
+          const store = tx.objectStore('localVideos');
+          const request = store.get(String(params.id));
+          
+          request.onsuccess = () => {
+            const result = request.result;
+            if (result) {
+              // Create blob URL from the stored file
+              const blob = result.file;
+              const url = URL.createObjectURL(blob);
+              setLocalVideoUrl(url);
+              setVideo({
+                _id: result._id,
+                title: result.title,
+                description: result.description,
+                thumbnailUrl: result.thumbnailUrl,
+                videoUrl: url,
+                duration: result.duration,
+                views: result.views,
+                category: result.category,
+                uploader: result.uploader,
+                isLocal: true,
+              });
+            } else {
+              router.push('/videos');
+            }
+          };
+          request.onerror = () => {
+            console.error('Error loading video from IndexedDB');
+            router.push('/videos');
+          };
         } else {
-          router.push('/videos');
+          // Fetch from API (original behavior)
+          const res = await fetch(`/api/video/${params.id}`);
+          const data = await res.json();
+          if (data.success) {
+            setVideo(data.data);
+          } else {
+            router.push('/videos');
+          }
         }
       } catch (error) {
         console.error('Error fetching video:', error);
@@ -49,6 +104,15 @@ export default function VideoPlayerPage() {
 
     fetchVideo();
   }, [params.id, router]);
+
+  // Cleanup blob URL on unmount
+  useEffect(() => {
+    return () => {
+      if (localVideoUrl) {
+        URL.revokeObjectURL(localVideoUrl);
+      }
+    };
+  }, [localVideoUrl]);
 
   useEffect(() => {
     if (videoRef.current) {
