@@ -15,6 +15,8 @@ StreamHub is a complete entertainment streaming application with MongoDB backend
 - [x] Open library with search functionality
 - [x] Modern UI with Tailwind CSS
 - [x] Seed data API for sample content
+- [x] YouTube video embed support
+- [x] Fix React hydration error and key prop issues
 
 ## Current Structure
 
@@ -85,6 +87,7 @@ StreamHub is a complete entertainment streaming application with MongoDB backend
 | Now | Complete StreamHub entertainment app |
 | 2026-03-03 | Fixed hydration error and added image configuration |
 | 2026-03-03 | Fixed React key prop error (unique _id for music/videos) |
+| 2026-03-03 | Added YouTube video embed support |
 
 ## Bug Fixes Applied
 
