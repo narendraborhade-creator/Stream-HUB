@@ -5,8 +5,8 @@ import Header from "@/components/layout/Header";
 import { PlayerProvider } from "@/context/PlayerContext";
 
 export const metadata: Metadata = {
-  title: "StreamHub - Free Music & Video Streaming",
-  description: "Stream and download music and videos for free",
+  title: "SecureScope - DNS & Website Threat Analyzer",
+  description: "Compare two websites for DNS security, TLS posture, and header-based threat exposure.",
 };
 
 export default function RootLayout({
