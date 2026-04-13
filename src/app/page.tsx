@@ -1,244 +1,246 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { Play, Music, Video, TrendingUp, Star, Sparkles } from 'lucide-react';
-import MusicCard from '@/components/music/MusicCard';
-import VideoCard from '@/components/video/VideoCard';
-import MusicPlayer from '@/components/music/MusicPlayer';
-import { usePlayer } from '@/context/PlayerContext';
+import { useMemo, useState } from 'react';
+import { ShieldCheck, Radar, Globe2, AlertTriangle, Sparkles } from 'lucide-react';
 
-interface Music {
-  _id: string;
-  title: string;
-  artist: string;
-  album: string;
-  duration: number;
-  coverUrl: string;
-  audioUrl: string;
-  genre: string;
-  playCount: number;
-  downloadCount: number;
+interface WebsiteSecurityReport {
+  input: string;
+  hostname: string;
+  resolvedIp: string | null;
+  httpsReachable: boolean;
+  sslValidDays: number;
+  hasCAARecord: boolean;
+  hasIPv6: boolean;
+  dnssecSignal: boolean;
+  securityHeaders: {
+    hsts: boolean;
+    csp: boolean;
+    xFrameOptions: boolean;
+  };
+  threatSignals: string[];
+  score: number;
 }
 
-interface Video {
-  _id: string;
-  title: string;
-  description: string;
-  thumbnailUrl: string;
-  videoUrl: string;
-  duration: number;
-  views: number;
-  category: string;
-  uploader: string;
+interface ComparisonResponse {
+  success: boolean;
+  error?: string;
+  data?: {
+    websiteA: WebsiteSecurityReport;
+    websiteB: WebsiteSecurityReport;
+  };
 }
+
+const metricMeta = [
+  { key: 'score', label: 'Overall Score' },
+  { key: 'ssl', label: 'TLS Health' },
+  { key: 'headers', label: 'Header Hardening' },
+  { key: 'dns', label: 'DNS Integrity' },
+] as const;
 
 export default function Home() {
-  const [musics, setMusics] = useState<Music[]>([]);
-  const [videos, setVideos] = useState<Video[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { currentTrack, queue, playTrack, nextTrack } = usePlayer();
+  const [websiteA, setWebsiteA] = useState('google.com');
+  const [websiteB, setWebsiteB] = useState('cloudflare.com');
+  const [result, setResult] = useState<ComparisonResponse['data']>();
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Check if we need to seed the database first
-        const checkRes = await fetch('/api/seed');
-        const checkData = await checkRes.json();
-        
-        if (checkData.musicCount === 0) {
-          // Seed the database
-          await fetch('/api/seed', { method: 'POST' });
-        }
+  const graphData = useMemo(() => {
+    if (!result) return null;
 
-        // Fetch music
-        const musicRes = await fetch('/api/music?limit=8');
-        const musicData = await musicRes.json();
-        if (musicData.success) {
-          setMusics(musicData.data);
-        }
-
-        // Fetch videos
-        const videoRes = await fetch('/api/video?limit=6');
-        const videoData = await videoRes.json();
-        if (videoData.success) {
-          setVideos(videoData.data);
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
-      }
+    const normalizeHeaders = (site: WebsiteSecurityReport) => {
+      const values = [site.securityHeaders.hsts, site.securityHeaders.csp, site.securityHeaders.xFrameOptions];
+      return (values.filter(Boolean).length / values.length) * 100;
     };
 
-    fetchData();
-  }, []);
+    const normalizeDns = (site: WebsiteSecurityReport) => {
+      const values = [site.hasCAARecord, site.hasIPv6, site.dnssecSignal];
+      return (values.filter(Boolean).length / values.length) * 100;
+    };
 
-  const handlePlayMusic = (music: Music) => {
-    playTrack(music, musics);
+    const normalizeTls = (site: WebsiteSecurityReport) => {
+      if (!site.httpsReachable) return 0;
+      return Math.min(100, (site.sslValidDays / 90) * 100);
+    };
+
+    return {
+      websiteA: {
+        score: result.websiteA.score,
+        ssl: normalizeTls(result.websiteA),
+        headers: normalizeHeaders(result.websiteA),
+        dns: normalizeDns(result.websiteA),
+      },
+      websiteB: {
+        score: result.websiteB.score,
+        ssl: normalizeTls(result.websiteB),
+        headers: normalizeHeaders(result.websiteB),
+        dns: normalizeDns(result.websiteB),
+      },
+    };
+  }, [result]);
+
+  const runComparison = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await fetch('/api/security-compare', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({ websiteA, websiteB }),
+      });
+
+      const payload = (await response.json()) as ComparisonResponse;
+
+      if (!response.ok || !payload.success || !payload.data) {
+        throw new Error(payload.error ?? 'Failed to compare websites.');
+      }
+
+      setResult(payload.data);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Unexpected error occurred.');
+    } finally {
+      setLoading(false);
+    }
   };
-
-  const handleWatchVideo = (video: Video) => {
-    window.location.href = `/videos/${video._id}`;
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-400">Loading content...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative h-96 overflow-hidden">
-        <div className="absolute inset-0 gradient-mesh"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/50 to-transparent"></div>
-        
-        <div className="relative z-10 h-full flex items-center px-8">
-          <div className="max-w-2xl">
-            <div className="flex items-center gap-2 mb-4">
-              <Sparkles className="w-5 h-5 text-pink-500" />
-              <span className="text-pink-400 font-medium">Welcome to StreamHub</span>
-            </div>
-            <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
-              Unlimited Entertainment
-            </h1>
-            <p className="text-xl text-gray-300 mb-8">
-              Stream music and videos for free. Search, discover, and download your favorite content.
+    <div className="min-h-screen overflow-x-hidden px-6 pb-20 pt-10 md:px-12">
+      <div className="hero-3d absolute inset-0 -z-10 opacity-80" />
+
+      <section className="mx-auto max-w-6xl">
+        <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-fuchsia-400/30 bg-fuchsia-500/10 px-4 py-2 text-sm text-fuchsia-100">
+          <Sparkles className="h-4 w-4" />
+          Infosys-grade Network Threat Optimizer
+        </div>
+        <h1 className="text-4xl font-black tracking-tight text-white md:text-6xl">
+          Compare DNS Security & Threat Surface of Any Two Websites
+        </h1>
+        <p className="mt-4 max-w-3xl text-lg text-slate-300">
+          Built with React + Node.js analysis pipeline. Run instant posture checks for DNS integrity, TLS health,
+          security headers, and suspicious domain threat indicators.
+        </p>
+      </section>
+
+      <section className="mx-auto mt-10 grid max-w-6xl gap-8 lg:grid-cols-[1.1fr_1fr]">
+        <form className="glass-3d rounded-3xl p-6" onSubmit={runComparison}>
+          <h2 className="mb-6 flex items-center gap-2 text-xl font-semibold text-white">
+            <Radar className="h-5 w-5 text-cyan-300" />
+            Security Duel Setup
+          </h2>
+
+          <div className="space-y-4">
+            <label className="block text-sm text-slate-200">
+              Website A
+              <input
+                value={websiteA}
+                onChange={(event) => setWebsiteA(event.target.value)}
+                className="mt-2 w-full rounded-xl border border-white/10 bg-slate-900/70 px-4 py-3 text-white outline-none transition focus:border-cyan-400"
+                placeholder="example.com"
+                required
+              />
+            </label>
+            <label className="block text-sm text-slate-200">
+              Website B
+              <input
+                value={websiteB}
+                onChange={(event) => setWebsiteB(event.target.value)}
+                className="mt-2 w-full rounded-xl border border-white/10 bg-slate-900/70 px-4 py-3 text-white outline-none transition focus:border-fuchsia-400"
+                placeholder="another-example.com"
+                required
+              />
+            </label>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="mt-6 w-full rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-500 px-5 py-3 font-bold text-slate-950 transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {loading ? 'Scanning threat vectors…' : 'Compare Websites'}
+          </button>
+
+          {error ? (
+            <p className="mt-4 flex items-center gap-2 text-sm text-rose-300">
+              <AlertTriangle className="h-4 w-4" />
+              {error}
             </p>
-            <div className="flex gap-4">
-              <Link
-                href="/music"
-                className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-xl font-medium transition-colors flex items-center gap-2"
-              >
-                <Music className="w-5 h-5" />
-                Browse Music
-              </Link>
-              <Link
-                href="/videos"
-                className="px-6 py-3 bg-gray-800 hover:bg-gray-700 rounded-xl font-medium transition-colors flex items-center gap-2"
-              >
-                <Video className="w-5 h-5" />
-                Watch Videos
-              </Link>
+          ) : null}
+        </form>
+
+        <div className="glass-3d rounded-3xl p-6">
+          <h2 className="mb-6 flex items-center gap-2 text-xl font-semibold text-white">
+            <Globe2 className="h-5 w-5 text-cyan-200" />
+            Cool Security Graph
+          </h2>
+
+          {!graphData ? (
+            <p className="text-slate-300">Run a comparison to generate your interactive graph.</p>
+          ) : (
+            <div className="space-y-4">
+              {metricMeta.map((metric) => {
+                const aValue = graphData.websiteA[metric.key];
+                const bValue = graphData.websiteB[metric.key];
+
+                return (
+                  <div key={metric.key}>
+                    <div className="mb-2 flex justify-between text-sm text-slate-200">
+                      <span>{metric.label}</span>
+                      <span>{Math.round(aValue)} vs {Math.round(bValue)}</span>
+                    </div>
+                    <div className="relative h-4 overflow-hidden rounded-full bg-slate-800/70">
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-full bg-cyan-400/80 transition-all duration-700"
+                        style={{ width: `${aValue}%` }}
+                      />
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-full bg-fuchsia-400/70 mix-blend-screen transition-all duration-700"
+                        style={{ width: `${bValue}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </div>
+          )}
         </div>
       </section>
 
-      {/* Trending Music Section */}
-      <section className="px-8 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-white" />
-            </div>
-            <h2 className="text-2xl font-bold">Trending Music</h2>
-          </div>
-          <Link href="/music" className="text-purple-400 hover:text-purple-300 font-medium">
-            View All →
-          </Link>
-        </div>
-        
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {musics.slice(0, 4).map((music) => (
-            <MusicCard
-              key={music._id}
-              music={music}
-              onPlay={handlePlayMusic}
-            />
+      {result ? (
+        <section className="mx-auto mt-8 grid max-w-6xl gap-6 md:grid-cols-2">
+          {[result.websiteA, result.websiteB].map((website, index) => (
+            <article key={website.hostname + index} className="glass-3d rotate-3d rounded-3xl p-6">
+              <h3 className="flex items-center gap-2 text-xl font-semibold text-white">
+                <ShieldCheck className="h-5 w-5 text-emerald-300" />
+                {website.hostname}
+              </h3>
+              <p className="mt-2 text-sm text-slate-300">Security Score: {website.score}/100</p>
+              <ul className="mt-4 space-y-1 text-sm text-slate-300">
+                <li>Resolved IP: {website.resolvedIp ?? 'Not resolved'}</li>
+                <li>HTTPS Reachable: {website.httpsReachable ? 'Yes' : 'No'}</li>
+                <li>SSL Validity Remaining: {website.sslValidDays} days</li>
+                <li>CAA Record: {website.hasCAARecord ? 'Present' : 'Missing'}</li>
+                <li>IPv6 Enabled: {website.hasIPv6 ? 'Yes' : 'No'}</li>
+              </ul>
+
+              <div className="mt-4">
+                <h4 className="text-sm font-semibold text-rose-200">Threat Signals</h4>
+                {website.threatSignals.length === 0 ? (
+                  <p className="mt-1 text-sm text-emerald-300">No major threat signals detected.</p>
+                ) : (
+                  <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-rose-200">
+                    {website.threatSignals.map((signal) => (
+                      <li key={signal}>{signal}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </article>
           ))}
-        </div>
-      </section>
-
-      {/* Popular Videos Section */}
-      <section className="px-8 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-pink-600 to-purple-600 rounded-xl flex items-center justify-center">
-              <Play className="w-5 h-5 text-white" />
-            </div>
-            <h2 className="text-2xl font-bold">Popular Videos</h2>
-          </div>
-          <Link href="/videos" className="text-purple-400 hover:text-purple-300 font-medium">
-            View All →
-          </Link>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {videos.slice(0, 3).map((video) => (
-            <VideoCard
-              key={video._id}
-              video={video}
-              onWatch={handleWatchVideo}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* All Music Section */}
-      <section className="px-8 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-              <Music className="w-5 h-5 text-white" />
-            </div>
-            <h2 className="text-2xl font-bold">All Music</h2>
-          </div>
-          <Link href="/library" className="text-purple-400 hover:text-purple-300 font-medium">
-            Go to Library →
-          </Link>
-        </div>
-        
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {musics.map((music) => (
-            <MusicCard
-              key={music._id}
-              music={music}
-              onPlay={handlePlayMusic}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* All Videos Section */}
-      <section className="px-8 py-8 pb-24">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-pink-600 to-red-600 rounded-xl flex items-center justify-center">
-              <Video className="w-5 h-5 text-white" />
-            </div>
-            <h2 className="text-2xl font-bold">All Videos</h2>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {videos.map((video) => (
-            <VideoCard
-              key={video._id}
-              video={video}
-              onWatch={handleWatchVideo}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* Music Player */}
-      {currentTrack && (
-        <MusicPlayer
-          currentTrack={currentTrack}
-          queue={queue}
-          onTrackEnd={nextTrack}
-          onPlayTrack={playTrack}
-        />
-      )}
+        </section>
+      ) : null}
     </div>
   );
 }

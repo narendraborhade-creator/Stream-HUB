@@ -125,3 +125,28 @@ input[type="range"]::-moz-range-thumb {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
+
+.hero-3d {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(34, 211, 238, 0.2), transparent 28%),
+    radial-gradient(circle at 80% 0%, rgba(217, 70, 239, 0.18), transparent 30%),
+    radial-gradient(circle at 50% 80%, rgba(14, 165, 233, 0.15), transparent 40%),
+    linear-gradient(120deg, #020617 0%, #0f172a 45%, #1e1b4b 100%);
+  filter: saturate(120%);
+}
+
+.glass-3d {
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.78), rgba(30, 41, 59, 0.58));
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 0 12px 40px rgba(2, 6, 23, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(14px);
+}
+
+.rotate-3d {
+  transform: perspective(900px) rotateX(2deg) rotateY(-2deg);
+  transition: transform 0.35s ease;
+}
+
+.rotate-3d:hover {
+  transform: perspective(900px) rotateX(0deg) rotateY(0deg) translateY(-2px);
+}

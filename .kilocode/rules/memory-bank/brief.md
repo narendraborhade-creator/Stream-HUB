@@ -1,48 +1,43 @@
-# Project Brief: Next.js Starter Template
+# Project Brief: NetShield 3D Comparator
 
 ## Purpose
 
-This is a minimal Next.js starter template designed for AI-assisted development. It provides a clean foundation that can be extended to build any type of web application through interaction with an AI assistant.
+Deliver a modern React + Node.js web application for security teams and developers to compare two websites across DNS security, TLS posture, and exploit-surface indicators.
 
 ## Target Users
 
-- Developers wanting a clean Next.js starting point
-- Users building applications through AI-assisted coding
-- Teams needing a standardized, modern Next.js setup
+- Security analysts performing fast website posture checks
+- Developers validating deployment hardening basics
+- Tech evaluators comparing trust posture of multiple domains
 
 ## Core Use Case
 
-Users describe what they want to build to an AI assistant, which then expands this template by:
+Users enter two website domains and receive:
 
-1. Adding components and pages as needed
-2. Installing additional dependencies
-3. Setting up databases, authentication, etc. using recipes
-4. Customizing styling and branding
+1. Side-by-side security score comparison
+2. DNS integrity checks (records/features)
+3. TLS and HTTPS reachability indicators
+4. Security header hardening visibility
+5. Threat signals summarized in plain language
 
 ## Key Requirements
 
 ### Must Have
 
-- Modern Next.js 16 setup with App Router
-- TypeScript for type safety
-- Tailwind CSS 4 for styling
-- ESLint for code quality
-- Clean, minimal starting structure
-- Bun as package manager
+- Input and compare two websites in one run
+- Backend security analysis workflow using Node.js
+- Interactive, polished UI with 3D feel
+- Visual comparison graph for key security metrics
+- Human-readable threat findings
 
 ### Nice to Have
 
-- Recipe system for common additions (database, auth)
-- Memory bank for AI context persistence
-- Clear development guidelines
-
-## Success Metrics
-
-- Clean, zero-error TypeScript setup
-- Passing lint and type checks
+- Historical comparisons and trend charts
+- Exportable PDF/CSV reports
+- Deeper DNSSEC validation and WHOIS enrichment
 
 ## Constraints
 
-- Minimal dependencies by default
-- Framework: Next.js 16 + React 19 + Tailwind CSS 4
-- Package manager: Bun
+- Runs inside Next.js 16 application structure
+- Uses built-in Node/network APIs where possible
+- Keeps implementation lightweight without heavy chart libraries
