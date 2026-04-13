@@ -2,18 +2,18 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  Home, 
-  Music, 
-  Video, 
-  Search, 
+import {
+  Shield,
+  Music,
+  Video,
+  Search,
   Library,
   PlayCircle,
   Heart
 } from 'lucide-react';
 
 const navItems = [
-  { href: '/', label: 'Home', icon: Home },
+  { href: '/', label: 'Security Lab', icon: Shield },
   { href: '/music', label: 'Music', icon: Music },
   { href: '/videos', label: 'Videos', icon: Video },
   { href: '/library', label: 'Library', icon: Library },
@@ -37,10 +37,10 @@ export default function Sidebar() {
       <nav className="flex-1 px-3">
         <ul className="space-y-1">
           {navItems.map((item) => {
-            const isActive = pathname === item.href || 
+            const isActive = pathname === item.href ||
               (item.href !== '/' && pathname.startsWith(item.href));
             const Icon = item.icon;
-            
+
             return (
               <li key={item.href}>
                 <Link
@@ -88,8 +88,8 @@ export default function Sidebar() {
 
       <div className="p-4 border-t border-gray-800">
         <div className="bg-gradient-to-r from-purple-600/10 to-pink-600/10 rounded-xl p-4">
-          <p className="text-sm text-gray-400">Free streaming & downloads</p>
-          <p className="text-xs text-gray-500 mt-1">No subscription required</p>
+          <p className="text-sm text-gray-400">DNS + threat insights</p>
+          <p className="text-xs text-gray-500 mt-1">Interactive web security checks</p>
         </div>
       </div>
     </aside>
