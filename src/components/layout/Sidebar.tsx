@@ -9,7 +9,8 @@ import {
   Search, 
   Library,
   PlayCircle,
-  Heart
+  Heart,
+  Shield
 } from 'lucide-react';
 
 const navItems = [
@@ -18,6 +19,7 @@ const navItems = [
   { href: '/videos', label: 'Videos', icon: Video },
   { href: '/library', label: 'Library', icon: Library },
   { href: '/search', label: 'Search', icon: Search },
+  { href: '/security', label: 'Security Lab', icon: Shield },
 ];
 
 export default function Sidebar() {
