@@ -25,6 +25,8 @@ StreamHub is a complete entertainment streaming application with MongoDB backend
 - [x] Redesign video page with improved local video import UI
 - [x] Extract video import button as separate reusable component
 - [x] Add device file picker for browsing and playing local videos directly
+- [x] Add Security Lab page to compare two websites using DNS and HTTP security signals
+- [x] Add Node.js API route for live DNS/TLS/header threat scanning and scoring
 
 ## Current Structure
 
@@ -44,6 +46,8 @@ StreamHub is a complete entertainment streaming application with MongoDB backend
 | `src/app/api/playlist/` | Playlist API routes | ✅ |
 | `src/app/api/seed/` | Seed data API | ✅ |
 | `src/app/api/download/` | Server-side download API | ✅ |
+| `src/app/security/` | Security comparison dashboard | ✅ |
+| `src/app/api/security/` | DNS/TLS/header scan API route | ✅ |
 | `src/components/` | Reusable UI components | ✅ |
 | `src/lib/mongodb.ts` | MongoDB connection | ✅ |
 | `src/lib/models.ts` | Database models | ✅ |
@@ -74,6 +78,7 @@ StreamHub is a complete entertainment streaming application with MongoDB backend
 4. **Downloads**: Download music for offline playback
 5. **Library**: Manage playlists and favorites
 6. **Seed Data**: Auto-populates with sample content
+7. **Security Lab**: Compare two websites for DNS and threat posture
 
 ## Quick Start
 
@@ -100,6 +105,7 @@ StreamHub is a complete entertainment streaming application with MongoDB backend
 | 2026-03-03 | Fixed YouTube controls and download CORS issue |
 | 2026-03-03 | Added local video import and IndexedDB storage |
 | 2026-03-03 | Redesign video page with improved local video import UI |
+| 2026-04-13 | Added Security Lab dashboard and `/api/security` comparison scanner |
 
 ## Bug Fixes Applied
 
@@ -107,3 +113,4 @@ StreamHub is a complete entertainment streaming application with MongoDB backend
 - [x] Added suppressHydrationWarning to form inputs to fix fdprocessedid mismatch
 - [x] Added picsum.photos to allowed image domains in next.config.ts
 - [x] Added unique _id fields to sample music and videos in seed data
+
