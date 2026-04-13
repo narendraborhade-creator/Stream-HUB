@@ -1,109 +1,48 @@
-# Active Context: StreamHub - Entertainment App
+# Active Context: SecureScope - Website Security Comparator
 
 ## Current State
 
-**App Status**: ✅ Fully functional
+**App Status**: ✅ Core comparison experience implemented
 
-StreamHub is a complete entertainment streaming application with MongoDB backend.
+The project now presents a cybersecurity-focused landing experience that compares two websites for DNS reliability, TLS posture, and security-header coverage using a React UI and Node.js API route logic.
 
 ## Recently Completed
 
-- [x] Complete entertainment app with music & video streaming
-- [x] MongoDB database with mongoose integration
-- [x] Music player with streaming and download
-- [x] Video player with streaming
-- [x] Open library with search functionality
-- [x] Modern UI with Tailwind CSS
-- [x] Seed data API for sample content
-- [x] YouTube video embed support
-- [x] Fix React hydration error and key prop issues
-- [x] Fix YouTube video ID preservation in fallback data
-- [x] Hide custom video controls for YouTube embeds since they have their own
-- [x] Add server-side download API to bypass CORS restrictions
-- [x] Add local video import and storage with IndexedDB
-- [x] Fix local video persistence after page refresh
-- [x] Redesign video page with improved local video import UI
-- [x] Extract video import button as separate reusable component
-- [x] Add device file picker for browsing and playing local videos directly
+- [x] Reworked home page into an interactive security dashboard
+- [x] Added website-vs-website comparison flow
+- [x] Added `POST /api/security/compare` API endpoint for DNS/TLS/header analysis
+- [x] Added radar graph and metric bars for side-by-side security scoring
+- [x] Updated app branding in layout metadata, sidebar, and header to match security use case
 
 ## Current Structure
 
 | File/Directory | Purpose | Status |
 |----------------|---------|--------|
-| `src/app/page.tsx` | Home page with featured content | ✅ |
-| `src/app/music/` | Music library page | ✅ |
-| `src/app/videos/` | Videos library page | ✅ |
-| `src/app/videos/[id]/` | Video player page | ✅ |
-| `src/app/library/` | User library page | ✅ |
-| `src/app/search/` | Search page | ✅ |
-| `src/app/favorites/` | Favorites page | ✅ |
-| `src/app/downloads/` | Downloads page | ✅ |
-| `src/app/api/music/` | Music API routes | ✅ |
-| `src/app/api/video/` | Video API routes | ✅ |
-| `src/app/api/search/` | Search API route | ✅ |
-| `src/app/api/playlist/` | Playlist API routes | ✅ |
-| `src/app/api/seed/` | Seed data API | ✅ |
-| `src/app/api/download/` | Server-side download API | ✅ |
-| `src/components/` | Reusable UI components | ✅ |
-| `src/lib/mongodb.ts` | MongoDB connection | ✅ |
-| `src/lib/models.ts` | Database models | ✅ |
-| `src/context/` | React context providers | ✅ |
+| `src/app/page.tsx` | Main interactive DNS & threat comparison dashboard | ✅ |
+| `src/app/api/security/compare/route.ts` | Node.js security analysis endpoint | ✅ |
+| `src/components/layout/Sidebar.tsx` | Security-focused navigation branding | ✅ |
+| `src/components/layout/Header.tsx` | Dashboard top bar with security context | ✅ |
+| `src/app/layout.tsx` | Updated metadata and app shell | ✅ |
 
 ## Tech Stack
 
-- **Framework**: Next.js 16 with App Router
-- **Database**: MongoDB (mongoose)
+- **Framework**: Next.js 16 (React frontend + Node.js server routes)
+- **Analysis**: Node DNS (`node:dns/promises`) + TLS (`node:tls`) checks
 - **Styling**: Tailwind CSS 4
 - **Icons**: Lucide React
-- **Package Manager**: Bun
 
-## Database
+## Security Analysis Coverage
 
-**Connection**: `mongodb://localhost:27017/entertainment_app`
-
-**Collections**:
-- `musics` - Music tracks with metadata
-- `videos` - Video content with metadata
-- `playlists` - User playlists
-
-## Key Features
-
-1. **Music Streaming**: Play music with full player controls
-2. **Video Streaming**: Watch videos with fullscreen support
-3. **Search**: Search across music and videos
-4. **Downloads**: Download music for offline playback
-5. **Library**: Manage playlists and favorites
-6. **Seed Data**: Auto-populates with sample content
-
-## Quick Start
-
-1. Ensure MongoDB is running on localhost:27017
-2. Run `bun dev` to start the development server
-3. The app will auto-seed sample data on first load
-
-## Pending Improvements
-
-- [ ] User authentication
-- [ ] Persistent favorites/downloads
-- [ ] More advanced search filters
-- [ ] Video categories and filtering
+1. **DNS Health**: A record and MX record checks
+2. **TLS Strength**: Handshake + protocol + certificate window checks
+3. **Header Protection**: Presence of key web security headers
+4. **Threat Signals**: Consolidated threat hints derived from missing/weak checks
+5. **Comparison Graph**: Radar visualization plus metric bars and winner summary
 
 ## Session History
 
 | Date | Changes |
 |------|---------|
-| Initial | Template created with base setup |
-| Now | Complete StreamHub entertainment app |
-| 2026-03-03 | Fixed hydration error and added image configuration |
-| 2026-03-03 | Fixed React key prop error (unique _id for music/videos) |
-| 2026-03-03 | Added YouTube video embed support |
-| 2026-03-03 | Fixed YouTube controls and download CORS issue |
-| 2026-03-03 | Added local video import and IndexedDB storage |
-| 2026-03-03 | Redesign video page with improved local video import UI |
-
-## Bug Fixes Applied
-
-- [x] Fixed React hydration mismatch in Header component (useSyncExternalStore approach)
-- [x] Added suppressHydrationWarning to form inputs to fix fdprocessedid mismatch
-- [x] Added picsum.photos to allowed image domains in next.config.ts
-- [x] Added unique _id fields to sample music and videos in seed data
+| 2026-04-13 | Pivoted homepage from media streaming view to SecureScope threat dashboard |
+| 2026-04-13 | Implemented API route for two-site security comparison and scoring |
+| 2026-04-13 | Added new graph-driven UI and updated layout branding to cybersecurity focus |
