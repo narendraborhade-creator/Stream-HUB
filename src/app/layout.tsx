@@ -1,12 +1,9 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import Sidebar from "@/components/layout/Sidebar";
-import Header from "@/components/layout/Header";
-import { PlayerProvider } from "@/context/PlayerContext";
+import type { Metadata } from 'next';
+import './globals.css';
 
 export const metadata: Metadata = {
-  title: "StreamHub - Free Music & Video Streaming",
-  description: "Stream and download music and videos for free",
+  title: 'NetShield 3D | DNS Security Comparator',
+  description: 'Compare DNS security and website threat signals with interactive visual analytics.',
 };
 
 export default function RootLayout({
@@ -16,16 +13,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="bg-gray-950 text-white antialiased">
-        <PlayerProvider>
-          <div className="min-h-screen">
-            <Sidebar />
-            <Header />
-            <main className="ml-64 pt-16 pb-24">
-              {children}
-            </main>
-          </div>
-        </PlayerProvider>
+      <body className="bg-slate-950 text-white antialiased">
+        <main>{children}</main>
       </body>
     </html>
   );
