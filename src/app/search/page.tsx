@@ -44,28 +44,31 @@ function SearchContent() {
   const { currentTrack, queue, playTrack, nextTrack } = usePlayer();
 
   useEffect(() => {
-    if (query) {
-      performSearch(query);
-    }
-  }, [query]);
-
-  const performSearch = async (searchQuery: string) => {
-    if (!searchQuery.trim()) return;
-    
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
-      const data = await res.json();
-      if (data.success) {
-        setMusicResults(data.music);
-        setVideoResults(data.videos);
+    const fetchResults = async () => {
+      if (!query.trim()) {
+        setLoading(false);
+        setMusicResults([]);
+        setVideoResults([]);
+        return;
       }
-    } catch (error) {
-      console.error('Error searching:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        if (data.success) {
+          setMusicResults(data.music);
+          setVideoResults(data.videos);
+        }
+      } catch (error) {
+        console.error('Error searching:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void fetchResults();
+  }, [query]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
