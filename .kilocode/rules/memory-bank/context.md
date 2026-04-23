@@ -100,6 +100,7 @@ StreamHub is a complete entertainment streaming application with MongoDB backend
 | 2026-03-03 | Fixed YouTube controls and download CORS issue |
 | 2026-03-03 | Added local video import and IndexedDB storage |
 | 2026-03-03 | Redesign video page with improved local video import UI |
+| 2026-04-23 | Fixed search page query-loading flow to remove blocking lint error and validated lint/typecheck/build |
 
 ## Bug Fixes Applied
 
@@ -107,3 +108,5 @@ StreamHub is a complete entertainment streaming application with MongoDB backend
 - [x] Added suppressHydrationWarning to form inputs to fix fdprocessedid mismatch
 - [x] Added picsum.photos to allowed image domains in next.config.ts
 - [x] Added unique _id fields to sample music and videos in seed data
+- [x] Refactored `src/app/search/page.tsx` query-driven fetch flow to avoid `react-hooks/immutability` lint error
+- [x] Added empty-query loading reset in search page to prevent stale loading state
